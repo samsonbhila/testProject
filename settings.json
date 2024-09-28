@@ -1,0 +1,10 @@
+{
+    "instantMongo": {
+        "connections": [
+            {
+                "name": "New Database Connection",
+                "uri": "mongodb://sa:P@ssword123@localhost:27017/admin"
+            }
+        ]
+    }
+}
