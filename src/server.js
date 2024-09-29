@@ -37,8 +37,11 @@ const limiter = rateLimit({
 // Initialize Express app
 const app = express();
 const port = 3000;
-
+// Middleware to parse JSON bodies
+app.use(express.json());
 app.use('/api', userAPI);
+// Middleware to parse JSON bodies
+app.use(express.json());
 // Variable to store session token
 let sessionToken;
 

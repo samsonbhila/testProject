@@ -82,31 +82,63 @@ router.get('/orderedUsers', (req, res) => {
 router.post('/addUser', (req, res) => {
     try {
         const newUser = req.body;
+
+        // Check if all required fields are present in the request body
+        if (!newUser.name || !newUser.surname || !newUser.department || !newUser.designation) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+
+        // Decrypt existing users
         const users = decryptUsersData();
+
+        // Add new user to the array
         users.push(newUser);
 
-        saveUsersData(users);  
+        // Re-encrypt and save users data
+        saveUsersData(users);
+
+        // Also update uniqueUsers.json
+        const uniqueUsers = JSON.parse(fs.readFileSync('./data/uniqueUsers.json', 'utf8'));
+        uniqueUsers.push(newUser);
+        fs.writeFileSync('./data/uniqueUsers.json', JSON.stringify(uniqueUsers));
+
         res.status(201).json({ message: 'User added successfully', user: newUser });
     } catch (error) {
         res.status(500).json({ message: 'Failed to add new user', error: error.message });
     }
 });
 
-// Update Existing User
-router.put('/updateUser', (req, res) => {
-    try {
-        const { email, updates } = req.body;
-        let users = decryptUsersData();
 
-        const userIndex = users.findIndex(user => user.email === email);
+// Update user endpoint
+router.put('/updateUser/:id', (req, res) => {
+    try {
+        const userId = req.params.id; // Get user ID from URL
+        const { name, surname, department, designation } = req.body; // Destructure request body
+
+        // Decrypt existing users
+        const users = decryptUsersData();
+
+        // Find the user by ID
+        const userIndex = users.findIndex(user => user.id === userId);
+
+        // Check if user exists
         if (userIndex === -1) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        users[userIndex] = { ...users[userIndex], ...updates };
+        // Update user details
+        users[userIndex] = {
+            ...users[userIndex], // keep existing properties
+            name,
+            surname,
+            department,
+            designation
+        };
 
+        // Re-encrypt and save users data
         saveUsersData(users);
-        res.json({ message: 'User updated successfully', user: users[userIndex] });
+
+        return res.json({ message: 'User updated successfully', user: users[userIndex] });
     } catch (error) {
         res.status(500).json({ message: 'Failed to update user', error: error.message });
     }
